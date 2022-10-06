@@ -1,0 +1,11 @@
+*.pyc
+**/__pycache__/
+__pycache__
+env
+bk
+*.txt
+*.jpg
+*.png
+*.webp
+*.env
+test-files

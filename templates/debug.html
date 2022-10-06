@@ -1,0 +1,37 @@
+<div id="osmdContainer"/>
+<script src="{{ url_for('static', filename='osmd/opensheetmusicdisplay.min.js') }}"></script>
+<script>
+    function sleep(waitMsec) {
+    var startMsec = new Date();
+    
+    // 指定ミリ秒間だけループさせる（CPUは常にビジー状態）
+    while (new Date() - startMsec < waitMsec);
+    }
+    
+
+  var osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmdContainer");
+  osmd.setOptions({
+    backend: "svg",
+    drawTitle: true,
+    newSystemFromXML:true,
+    
+    // drawingParameters: "compacttight" // don't display title, composer etc., smaller margins
+  });
+
+  osmd.rules.RenderRehearsalMarks = true; // default
+  osmd.rules.RehearsalMarkXOffset = 0; // default: avoid collision with metronome number
+  osmd.rules.RehearsalMarkYOffset = 0; // default: avoid collision with chord symbols
+  //osmd.rules.RehearsalMarkXOffsetDefault = 0;
+  //osmd.rules.RehearsalMarkYOffsetDefault = 0;
+  osmd.rules.RehearsalMarkFontSize = 9; // vexflow default: 12, too big with chord symbols
+  osmd.rules.RehearsalMarkXOffsetSystemStartMeasure = -30; 
+
+  osmd
+    .load("{{ url_for('musicxml_test') }}")
+    .then(
+      function() {
+        osmd.render();
+        }
+    );
+
+</script>
