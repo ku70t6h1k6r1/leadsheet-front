@@ -1,5 +1,9 @@
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/input.css') }}">
 
+<div id="command-field">
+    <ion-icon id="next-measure" class="icon" name="log-in-outline"></ion-icon>
+
+</div>
 
 <div id="pianoroll-field">
     <canvas id="pianoroll" width="2400";  height="2400" ></canvas>
@@ -8,3 +12,9 @@
 
 
 <script src="{{ url_for('static', filename='js/input.js') }}"></script>
+
+<!--ICONのやつ-->
+<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+<!--/ICONのやつ-->
+
