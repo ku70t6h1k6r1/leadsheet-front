@@ -1,0 +1,29 @@
+body{
+    color: #121212
+}
+
+.btn{
+    color: #4c3c71;
+    background-color: #fff;
+    border-color: #4c3c71;   
+}
+
+.btn:hover{
+    color: #a98bbb;
+    background-color: #4c3c71;
+    border-color: #4c3c71;   
+}
+
+.btn:active{
+    color: #a98bbb;
+    background-color: #4c3c71;
+    border-color: #4c3c71;   
+}
+
+.card{
+    border-color: #4c3c71;
+}
+
+.card-title {
+    color:#4c3c71
+}

@@ -2,8 +2,8 @@ export var background_color_odd = "#FFFFFF";
 export var background_color_sharpflat_odd  = "#F0F0F0";
 export var background_color_even = "#F8F8F8";
 export var background_color_sharpflat_even =  "#ECECEC";
-export var grid_color = "#C5E9FB";
-export var grid_bold_color = "#5BC2F4";
+export var grid_color = "#c0b994";
+export var grid_bold_color = "#4c3c71";
 export var note_natural = "#5B37CC";
 export var note_sharp = "#E33059";
 

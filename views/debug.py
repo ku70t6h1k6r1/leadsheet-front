@@ -9,5 +9,5 @@ class Debug:
             return render_template('input.html')
 
         @app.route("/xml")
-        def debug():
+        def xml():
             return render_template('debug.html')
