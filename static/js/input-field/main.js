@@ -14,6 +14,7 @@ import {
     } from './grid.js';
 import { 
     cursor2gridId, 
+    gridId2cursor,
     gridId2axis, 
     grid_enable, 
     get_random
@@ -27,7 +28,8 @@ import {
         grid_bold_color, 
         note_natural, 
         note_sharp,
-        get_background
+        get_background,
+        get_notecolor
     }  from './color.js';
     
 //<grid>
@@ -41,9 +43,9 @@ var grid_id_ex;
 var grid_id_ey;
 var grid_on = false;
 
-var note_status_flat = -1;
-var note_status_natural = 0;
-var note_status_sharp = 1;
+export var note_status_flat = -1;
+export var note_status_natural = 0;
+export var note_status_sharp = 1;
 var note_status_default = note_status_flat;
 //</grid>
 
@@ -60,14 +62,10 @@ var pianoroll_measure=[]
 
 window.addEventListener("load", canvas);
  
+
 function canvas(){
     load_canvas();
     load_pianoroll();
-
-    canvas_element.addEventListener("mousedown", {pianoroll:pianoroll, notes_status_sharpflap:notes_status_sharpflap, handleEvent:mousedown});
-    canvas_element.addEventListener("mousemove", {pianoroll:pianoroll, notes_status_sharpflap:notes_status_sharpflap, handleEvent:mousemove});
-    canvas_element.addEventListener("mouseup", {pianoroll:pianoroll, notes_status_sharpflap:notes_status_sharpflap, handleEvent:mouseup});
-
     load_command();
 }
 
@@ -77,7 +75,7 @@ function load_command(){
 }
 
 export const  load_pianoroll = () => {
-    if(pianoroll.length == 0){
+    if(score.length == 0){
         for(let v = 0; v < pitch_range; v++){
             pianoroll[v] = [];
             for(let h = 0; h < beat_range; h++){
@@ -88,11 +86,14 @@ export const  load_pianoroll = () => {
         for(let v = 0; v < pitch_range; v++){
             pianoroll[v] = [];
             for(let h = 0; h < beat_range; h++){
-                pianoroll[v][h] = null;
+                var h_absolute = h + start_grid_n;
+                if(h_absolute < score[v].length){
+                    pianoroll[v][h] = score[v][h_absolute];
+
+                }
             }
         }
     }
-
 
     //<base measure_id>
     for(let v = 0; v < pitch_range; v++){
@@ -111,6 +112,23 @@ export const  load_pianoroll = () => {
         }
     }    
     //</base grid>
+
+    //<note on>
+    for(let v = 0; v < pitch_range; v++){
+        for(let h = 0; h < beat_range; h++){
+            if(pianoroll[v][h]){
+                note_on_by_note_id(pianoroll[v][h], pianoroll, notes_status_sharpflap)
+            }
+        }
+    }
+    //</note on>
+
+    //<mouse>
+    canvas_element.addEventListener("mousedown", mousedown);
+    canvas_element.addEventListener("mousemove", mousemove);
+    canvas_element.addEventListener("mouseup", mouseup);    
+    //</mouse>
+
 }
 
 
@@ -120,14 +138,23 @@ function reload_pianoroll(){
     load_pianoroll();
 }
 
-
+function dump_score(){
+    for(let v = 0; v < pitch_range; v++){
+        if(score.length <= v ){
+            score[v] = [];
+            for(let i=0; i < start_grid_n; i++){
+                score[v][i] = null;
+            }
+        }
+        for(let h = 0; h < beat_range; h++){
+            score[v][h+start_grid_n] = pianoroll[v][h];
+        }
+    }
+}
 
 //<mouse event handler>
 function mousemove(e){
-    var pianoroll=this.pianoroll;
-    var notes_status_sharpflap=this.notes_status_sharpflap;
-
-    if(grid_on){
+   if(grid_on){
         const rect = e.target.getBoundingClientRect();
         const viewX = e.clientX - rect.left;
         var grid_ex_temp = viewX*scale_width;
@@ -147,28 +174,9 @@ function mousemove(e){
     }
 }
 
-function dump_score(){
-    for(let v = 0; v < pitch_range; v++){
-        if(score.length <= v ){
-            score[v] = [];
-            for(let i=0; i < start_grid_n; i++){
-                score[v][i] = null;
-            }
-        }
-        for(let h = 0; h < beat_range; h++){
-            score[v][h+start_grid_n] = pianoroll[v][h];
-        }
-    }
-    console.log(score);
-
-}
-
 function mouseup(e){
-    var pianoroll=this.pianoroll;
-    var notes_status_sharpflap=this.notes_status_sharpflap;
-
     //<クリックしただけ>
-    if(grid_on && grid_sx==grid_ex && grid_enable(pianoroll,grid_id_sx)){
+    if(grid_on && grid_sx==grid_ex){
         note_on(grid_sx, grid_sy, grid_ex, grid_ey, pianoroll, notes_status_sharpflap);
     }
     //</クリックしただけ>
@@ -176,8 +184,8 @@ function mouseup(e){
 }
 
 function mousedown(e){
-    var pianoroll=this.pianoroll;
-    var notes_status_sharpflap=this.notes_status_sharpflap;
+    //色が変わるのはすでにオンになっているところだけ。
+    //notes_status_sharpflapのステータスは変更。
 
     const rect = e.target.getBoundingClientRect();
     const viewX = e.clientX - rect.left;
@@ -190,24 +198,45 @@ function mousedown(e){
     [grid_id_sx, grid_id_sy] = cursor2gridId(grid_sx, grid_sy);
     [grid_id_ex, grid_id_ey] = cursor2gridId(grid_ex, grid_ey);
 
-    grid_on = grid_enable(pianoroll, grid_id_sx);
 
     //<note status change or delete>
-    if(!grid_on){
+    if(grid_enable(pianoroll, grid_id_sx)){
+        var note_id = get_random();
+        pianoroll[grid_id_sy][grid_id_sx] = note_id;
+        if(pitch_sharpflat[grid_id_sy%grid_par_octave]){
+            notes_status_sharpflap[note_id] = note_status_flat
+        }else{
+            notes_status_sharpflap[note_id] = note_status_natural
+        }
+        grid_on = true;
+    }else{
+        grid_on = false;
+        //すでにONになっている。
         var note_id = pianoroll[grid_id_sy][grid_id_sx];
         if(note_id){
             if(pitch_sharpflat[grid_id_sy%grid_par_octave]){
                 var status = notes_status_sharpflap[note_id]
-                if(status == note_status_natural || status == note_status_sharp ){
-                    note_off(note_id, pianoroll, notes_status_sharpflap); 
-                }else{
+                console.log(status);
+                if(status === note_status_natural ){
+                    console.log("この条件にはこないはず1")
+                }else if(status === note_status_sharp ){
+                    delete notes_status_sharpflap[note_id];
+                    note_off(note_id, pianoroll, notes_status_sharpflap);                
+                }else if(status === note_status_flat ){
+                    notes_status_sharpflap[note_id] = note_status_sharp;
                     note_on_by_note_id(note_id,  pianoroll, notes_status_sharpflap);
-                }   
+                }else if(status === undefined){
+                    console.log("この条件にはこないはず2")
+                    notes_status_sharpflap[note_id] = note_status_flat;
+                    note_on_by_note_id(note_id,  pianoroll, notes_status_sharpflap);
+                }else{
+                    console.log("この条件にはこないはず3")
+                }
             }else{
-                note_off(note_id, pianoroll, notes_status_sharpflap); 
+                delete notes_status_sharpflap[note_id]
+                note_off(note_id, pianoroll); 
             }
-
-        }    
+        }
     }
     //</note status change or delete>
 }
@@ -236,16 +265,12 @@ function note_on_by_note_id(note_id, pianoroll, notes_status_sharpflap){
     }
     //</manage pianoroll>
 
-
     var [sx, sy, _, _] = gridId2axis(grid_id_sx_temp, grid_id_sy_temp);
     var [_, _, ex, ey] = gridId2axis(grid_id_ex_temp, grid_id_ey_temp);
-    rectangle(context, sx, sy, ex, ey, note_sharp, null);
-
-    //<manage note status>
-    notes_status_sharpflap[note_id] = note_status_sharp
-    //</manage note status>
+    
+    var note_color = get_notecolor(notes_status_sharpflap[note_id]);
+    rectangle(context, sx, sy, ex, ey, note_color, null);
 }
-
 
 function note_on(sx_cursor, sy_cursor, ex_cursor, ey_cursor, pianoroll, notes_status_sharpflap){
     var context = canvas_element.getContext("2d");    
@@ -254,15 +279,7 @@ function note_on(sx_cursor, sy_cursor, ex_cursor, ey_cursor, pianoroll, notes_st
     var [sx, sy, _, _] = gridId2axis(grid_sx_id, grid_sy_id);
     var [_, _, ex, ey] = gridId2axis(grid_ex_id, grid_ey_id);
 
-
-    rectangle(context, sx, sy, ex, ey, note_natural, null);
-
-    //<manage pianoroll>
-    if (pianoroll[grid_sy_id][grid_sx_id] === null){
-        var note_id = get_random();
-    }else{
-        var note_id = pianoroll[grid_sy_id][grid_sx_id]
-    }
+    var note_id = pianoroll[grid_sy_id][grid_sx_id]
     
     for(let y=grid_sy_id; y<=grid_ey_id; y++){
         for(let x=grid_sx_id; x<=grid_ex_id; x++){
@@ -271,12 +288,11 @@ function note_on(sx_cursor, sy_cursor, ex_cursor, ey_cursor, pianoroll, notes_st
     }
     //</manage pianoroll>
 
-    //<manage note status>
-    notes_status_sharpflap[note_id] = note_status_default
-    //</manage note status>
+    var note_color = get_notecolor(notes_status_sharpflap[note_id]);
+    rectangle(context, sx, sy, ex, ey, note_color, null);
 }
 
-function note_off(note_id, pianoroll, notes_status_sharpflap){
+function note_off(note_id, pianoroll){
     for(let v = 0; v < pitch_range; v++){
         for(let h = 0; h < beat_range; h++){
             if(pianoroll[v][h]==note_id){
@@ -285,11 +301,6 @@ function note_off(note_id, pianoroll, notes_status_sharpflap){
             }
         }
     }
-
-    //<manage note status>
-    delete notes_status_sharpflap[note_id]
-    //</manage note status>
-
 }
 
 function note_reset(h, v, pianoroll_measure, pitch_sharpflat, grid_par_octave){
@@ -321,4 +332,3 @@ function note_reset(h, v, pianoroll_measure, pitch_sharpflat, grid_par_octave){
     }
     //</horizontal>
 }
-

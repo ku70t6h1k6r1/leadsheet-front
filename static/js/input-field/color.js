@@ -1,3 +1,9 @@
+import{
+    note_status_flat,
+    note_status_natural,
+    note_status_sharp
+} from './main.js'
+ 
 export var background_color_odd = "#FFFFFF";
 export var background_color_sharpflat_odd  = "#F0F0F0";
 export var background_color_even = "#F8F8F8";
@@ -24,4 +30,16 @@ export const  get_background=(v, h, pianoroll_measure, pitch_sharpflat, grid_par
         } 
     }
     return background_color
+}
+
+export const  get_notecolor=(note_status)=>{
+    if(note_status==note_status_flat){
+        return note_natural
+    }else if(note_status==note_status_natural){
+        return note_natural
+    }else if(note_status==note_status_sharp){
+        return note_sharp
+    }else{
+        return note_natural
+    }
 }

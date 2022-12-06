@@ -31,6 +31,16 @@ export const cursor2gridId=(x_cursor, y_cursor)=>{
     }
     return [grid_x_id, grid_y_id]
 }
+
+
+export const gridId2cursor=(grid_x_id, grid_y_id)=>{
+
+    var x_cursor = grid_width * (grid_x_id + 0.5);
+    var y_cursor = grid_height * (grid_y_id + 0.5);
+
+    return [x_cursor, y_cursor]
+}
+
 export const gridId2axis=(grid_x_id, grid_y_id)=>{
     //console.log(grid_width, grid_height)
     var sx = grid_x_id*grid_width;
