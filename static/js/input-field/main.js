@@ -10,7 +10,8 @@ import {
         grid_par_quarter,
         grid_par_octave,
         start_grid_n,
-        next_grids
+        next_grids,
+        past_grids
     } from './grid.js';
 import { 
     cursor2gridId, 
@@ -71,7 +72,10 @@ function canvas(){
 
 function load_command(){
     var nextMeasureBtn = document.getElementById("next-measure");
-    nextMeasureBtn.addEventListener('click', reload_pianoroll)
+    nextMeasureBtn.addEventListener('click', next_pianoroll)
+    var pastMeasureBtn = document.getElementById("past-measure");
+    pastMeasureBtn.addEventListener('click', past_pianoroll)
+
 }
 
 export const  load_pianoroll = () => {
@@ -132,11 +136,18 @@ export const  load_pianoroll = () => {
 }
 
 
-function reload_pianoroll(){   
+function next_pianoroll(){   
     dump_score()
     next_grids()
     load_pianoroll();
 }
+
+function past_pianoroll(){   
+    dump_score()
+    past_grids()
+    load_pianoroll();
+}
+
 
 function dump_score(){
     for(let v = 0; v < pitch_range; v++){
@@ -240,16 +251,15 @@ function mousedown(e){
     }
     //</note status change or delete>
 }
-
 //</mouse event handler>
 
 function note_on_by_note_id(note_id, pianoroll, notes_status_sharpflap){
     var context = canvas_element.getContext("2d");    
-   
     var grid_id_sx_temp = null;
     var grid_id_sy_temp = null;
     var grid_id_ex_temp = null;
     var grid_id_ey_temp = null;
+
     //<manage pianoroll>
     for(let v = 0; v < pitch_range; v++){
         for(let h = 0; h < beat_range; h++){
@@ -267,7 +277,6 @@ function note_on_by_note_id(note_id, pianoroll, notes_status_sharpflap){
 
     var [sx, sy, _, _] = gridId2axis(grid_id_sx_temp, grid_id_sy_temp);
     var [_, _, ex, ey] = gridId2axis(grid_id_ex_temp, grid_id_ey_temp);
-    
     var note_color = get_notecolor(notes_status_sharpflap[note_id]);
     rectangle(context, sx, sy, ex, ey, note_color, null);
 }

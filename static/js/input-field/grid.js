@@ -32,3 +32,10 @@ export const load_canvas=()=>{
 export const next_grids=()=>{
     start_grid_n = start_grid_n + move_grid_n;
 }
+
+
+export const past_grids=()=>{
+    if(start_grid_n >= move_grid_n){
+        start_grid_n = start_grid_n - move_grid_n;
+    }
+}
