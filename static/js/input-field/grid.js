@@ -17,6 +17,7 @@ export var start_grid_n = 8;
 export var move_grid_n = 8;
 export var grid_height;
 export var grid_width;
+export var midinote_bottom_do = 60;
 //</grid base config>
 
 export const load_canvas=()=>{

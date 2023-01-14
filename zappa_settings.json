@@ -1,0 +1,10 @@
+{
+    "dev": {
+        "app_function": "app.app",
+        "aws_region": "ap-northeast-1",
+        "profile_name": "kubota_private_cli",
+        "project_name": "leadsheet-front",
+        "runtime": "python3.8",
+        "s3_bucket": "zappa-ri6v3sm92"
+    }
+}

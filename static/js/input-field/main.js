@@ -33,6 +33,9 @@ import {
         get_notecolor
     }  from './color.js';
     
+import {
+    save_score
+} from './api.js'
 //<grid>
 var grid_sx;
 var grid_sy;
@@ -75,6 +78,8 @@ function load_command(){
     nextMeasureBtn.addEventListener('click', next_pianoroll)
     var pastMeasureBtn = document.getElementById("past-measure");
     pastMeasureBtn.addEventListener('click', past_pianoroll)
+    var saveBtn = document.getElementById("save");
+    saveBtn.addEventListener('click', execute_save_score);
 
 }
 
@@ -340,4 +345,8 @@ function note_reset(h, v, pianoroll_measure, pitch_sharpflat, grid_par_octave){
         line(context, sx, sy, ex, ey, grid_bold_color);
     }
     //</horizontal>
+}
+
+function execute_save_score(){
+    save_score(score);
 }

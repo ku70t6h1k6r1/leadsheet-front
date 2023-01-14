@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise>
+    <work>
+        <work-title>{{songInformation.title}}</work-title>
+    </work>
+    <identification>
+        <encoding>
+            <software>kubota-demo</software>
+            <encoding-date>{{songInformation.encoding_date}}</encoding-date>
+            <supports element="accidental" type="yes"/>
+            <supports element="beam" type="yes"/>
+            <supports element="print" attribute="new-page" type="yes" value="yes"/>
+            <supports element="print" attribute="new-system" type="yes" value="yes"/>
+            <supports element="stem" type="yes"/>
+        </encoding>
+    </identification>
+
+    <part-list>
+        {% for scorePart in scoreParts %}
+            <score-part id="{{scorePart.part_id}}">
+                <part-name>{{scorePart.part_name}}</part-name>
+                <part-abbreviation>{{scorePart.part_abbreviation}}</part-abbreviation>
+                <score-instrument id="{{scorePart.scoreInstrument.id}}">
+                    <instrument-name>{{scorePart.scoreInstrument.instrument_name}}</instrument-name>
+                </score-instrument>
+                <midi-device id="{{scorePart.scoreInstrument.id}}" port="{{scorePart.scoreInstrument.midi_port}}"></midi-device>
+                <midi-instrument id="{{scorePart.scoreInstrument.id}}">
+                    <midi-channel>{{scorePart.scoreInstrument.midi_channel}}</midi-channel>
+                    <midi-program>{{scorePart.scoreInstrument.midi_program}}</midi-program>
+                    <volume>{{scorePart.scoreInstrument.midi_volume}}</volume>
+                    <pan>{{scorePart.scoreInstrument.midi_pan}}</pan>
+                </midi-instrument>
+            </score-part>
+        {% endfor %}
+    </part-list>
+
+    {% for part in parts %}
+        <part id="{{part.part_id}}">
+            {% for measure in part.measures %}
+                <measure number="{{measure.number}}">
+                    {% if measure.new_system%}
+                        <print new-system="yes"></print>
+                    {% endif %}
+                    {% if measure.direction %}
+                        <direction placement="above">
+                            <direction-type>
+                                <rehearsal>{{measure.direction.rehearsal}}</rehearsal>
+                            </direction-type>
+                        </direction>
+                    {% endif %}
+                    {% if measure.attributes %}
+                        <attributes>
+                            <divisions>{{measure.attributes.divisions}}</divisions>
+                            <key>
+                                <fifths>{{measure.attributes.key_fifths}}</fifths>
+                            </key>
+                            <time>
+                                <beats>{{measure.attributes.time.beat}}</beats>
+                                <beat-type>{{measure.attributes.time.beat_type}}</beat-type>
+                            </time>
+                            <clef>
+                                <sign>{{measure.attributes.clef.sign}}</sign>
+                                <line>{{measure.attributes.clef.line}}</line>
+                            </clef>
+                        </attributes>
+                    {% endif %}
+                    {% for note in measure.notes %}
+                        {% if note.harmony %}
+                            <harmony>
+                                <root>
+                                    <root-step>{{note.harmony.root_step}}</root-step>
+                                    {% if note.harmony.root_alter %}
+                                        <root-alter>{{note.harmony.root_alter}}</root-alter>
+                                    {% endif %}
+                                </root>
+                                <kind text="{{note.harmony.text}}">{{note.harmony.kind}}</kind>
+                            </harmony>
+                        {% endif %}
+                        <note>
+                            {% if note.note.pitch.restflg %}
+                                <rest/>
+                            {% else %}
+                                <pitch>
+                                    <step>{{note.note.pitch.step}}</step>
+                                    {% if note.note.pitch.rootAlter %}
+                                        <alter>{{note.note.pitch.rootAlter}}</alter>
+                                    {% endif %}
+                                    <octave>{{note.note.pitch.octave}}</octave>
+                                </pitch>
+                            {% endif %}
+                            <duration>{{note.note.duration}}</duration>
+                            {% if note.note.tie %}
+                                <tie type="{{note.note.tie}}"/>
+                            {% endif %}
+                            {% if note.note.tie2 %}
+                                <tie type="{{note.note.tie2}}"/>
+                            {% endif %}
+                            <voice>{{note.note.voice}}</voice>
+                            <type>{{note.note.type}}</type>
+                            {% if note.note.dot %}
+                            <dot/>
+                            {% endif %}
+                            {% if note.note.stem %}
+                                <stem>{{note.note.stem}}</stem>
+                            {% endif %}
+                            {% if note.note.beam %}
+                                <beam number="1">{{note.note.beam}}</beam>
+                            {% endif %}
+                            {% if note.note.tie %}
+                                <notations>
+                                    <tied type="{{note.note.tie}}"/>
+                                    {% if note.note.tie2 %}
+                                        <tied type="{{note.note.tie2}}"/>
+                                    {% endif %}
+                                </notations>
+                            {% endif %}
+                        </note>
+                    {% endfor %}
+                    {% if measure.barline %}    
+                        <barline location="right">
+                            <bar-style>{{measure.barline.bar_style}}</bar-style>
+                        </barline>
+                    {% endif %}
+                </measure>
+            {% endfor %}
+        </part>
+    {% endfor %}
+</score-partwise>
+
