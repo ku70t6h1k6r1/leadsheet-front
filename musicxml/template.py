@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
 class Const:
+    class Note:
+        def __init__(self):
+            self.hold = -1
+            self.rest = -2
+
     class Tie:
         def __init__(self):
             self.start = "start"
@@ -76,6 +81,7 @@ class Const:
         self.tie = self.Tie()
         self.beam = self.Beam()
         self.partMelody = self.Part_Melody()
+        self.note = self.Note()
 
 Const = Const()
 

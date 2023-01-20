@@ -2,13 +2,16 @@ import {
     grid_height,
     grid_width,
     pitch_range,
-    beat_range
+    beat_range,
+    grid_par_quarter,
+    grid_height_chord,
+    grid_width_chord
 } from './grid.js';
+
 
 export const get_random=()=>{
     return Math.floor(Math.random() * 10000) + 1;
 }
-
 
 export const cursor2gridId=(x_cursor, y_cursor)=>{
     var grid_x_id = 0;
@@ -60,4 +63,43 @@ export const grid_enable=(pianoroll, grid_x_id)=>{
         }
     }
     return enable
+}
+
+export const get_pitch_sharpflat=(midinote_bottom, pitch_range)=>{
+    var pitch_sharpflat_1oct = [false, true, false, true, false, false, true, false, true, false, true,false];
+    var pitch_sharpflat = Array(pitch_range);
+    var midinote_rel = midinote_bottom%12 ;  
+
+    for(let i=0; i < pitch_range; i++){
+        pitch_sharpflat[i] = pitch_sharpflat_1oct[ (midinote_rel + i)%12 ];
+    };
+    var pitch_sharpflat_rev = pitch_sharpflat.reverse();
+
+    return pitch_sharpflat_rev
+}
+
+
+export const cursor2gridId_for_chord=(x_cursor)=>{
+    var grid_x_id = 0;
+
+    for(let h = 0; h < parseInt(beat_range/grid_par_quarter); h++){
+        if((grid_x_id+1)*grid_width_chord<x_cursor){
+            grid_x_id += 1;
+        }else{
+            break
+        }
+    }
+    return grid_x_id
+}
+
+
+export const gridId2axis_for_chord=(grid_x_id)=>{
+    //console.log(grid_width, grid_height)
+    var grid_y_id  = 0;
+    var sx = grid_x_id*grid_width_chord;
+    var sy = grid_y_id*grid_height_chord;
+    var ex = (grid_x_id+1)*grid_width_chord;
+    var ey = (grid_y_id+1)*grid_height_chord;
+
+    return [sx, sy, ex, ey]
 }

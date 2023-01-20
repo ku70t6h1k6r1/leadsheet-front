@@ -1,13 +1,17 @@
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/input.css') }}">
 
 <div id="command-field">
-    <ion-icon id="next-measure" class="icon" name="arrow-forward-outline"></ion-icon>
     <ion-icon id="past-measure" class="icon" name="chevron-back-outline"></ion-icon>
-    <ion-icon id="save" name="checkmark-outline"></ion-icon>
+    <ion-icon id="next-measure" class="icon" name="chevron-forward-outline"></ion-icon>
+    <ion-icon id="save" class="icon" name="checkmark-outline"></ion-icon>
+</div>
+
+<div id="chord-field">
+    <canvas id="chord" width="2700";  height="150" ></canvas>
 </div>
 
 <div id="pianoroll-field">
-    <canvas id="pianoroll" width="2400";  height="2400" ></canvas>
+    <canvas id="pianoroll" width="2700";  height="2700" ></canvas>
 </div>
 <input type="hidden" name="note" id="note">
 

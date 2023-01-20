@@ -5,9 +5,9 @@ from jinja2 import Template, Environment, FileSystemLoader
 import json
 from musicxml.template import Const, Measure, ScoreInstrument, ScorePart, Part, SongInfomation, Time, Clef, Note, Harmony
 from musicxml.notes import  Notes
-from musicxml.common import Common as MXMLFunction
-from common.const import Const as ScoreConst
-from common.common import Common as ScoreFunction
+#from musicxml.common import Common as MXMLFunction
+#from common.const import Const as ScoreConst
+#from common.common import Common as ScoreFunction
 
 
 class Musicxml:            
@@ -19,6 +19,7 @@ class Musicxml:
 
 
     def final(self, score, outpath):
+        print(score)
         title = "This is title"
         encoding_date =datetime.now(pytz.timezone('Asia/Tokyo')).strftime("%Y-%m-%d")
 
@@ -26,27 +27,28 @@ class Musicxml:
 
         bar_id = 0
         first_measure_post_rehearsalLetter = None
-        for line in score:
-            rehearsalLetter = line["Rehearsal-Letter"]
-            bars_chord = line["chords"]
-            bars_melody = line["melody"]
-
-
-            print("REHEASAL MARK : ", rehearsalLetter)
+        #for line in score:
+        for _ in range(1):
+            #rehearsalLetter = line["Rehearsal-Letter"]
+            #bars_chord = line["chords"]
+            #bars_melody = line["melody"]
+            bars_melody = score
+            #break 
+            #print("REHEASAL MARK : ", rehearsalLetter)
             past_note_on = None
             for id_ in range(len(bars_melody)):
-                print("BAR NUM : ", id_)
                 bar_id += 1
-                bar_chord = bars_chord[id_]
+                #bar_chord = bars_chord[id_]
+                bar_chord = None
                 bar_melody = bars_melody[id_]
-                time_ = MXMLFunction.timeSignature(bar_melody["time-signature"])
-                keyfifths = MXMLFunction.keyFifths(bar_melody["key"])
+                time_ = Notes.timeSignature(bar_melody["timesignature"])
+                keyfifths = bar_melody["key"] #Notes.keyFifths()
                 division = bar_melody["division"]
-                accidentalNotation = MXMLFunction.accidentalNotation(keyfifths)
-                attribute_division = MXMLFunction.get_attribute_division(time_, division)
+                accidentalNotation = Notes.accidentalNotation(keyfifths)
+                attribute_division = Notes.get_attribute_division(time_, division)
 
                 if id_ + 1 < len(bars_melody):
-                    firstMidiNote_postMeaure =  bars_melody[id_ + 1]["content"][0] 
+                    firstMidiNote_postMeaure, _ =  bars_melody[id_ + 1]["content"][0]
                 
                 else:
                     firstMidiNote_postMeaure = -2
@@ -56,7 +58,7 @@ class Musicxml:
                 m = Measure(bar_id)
                 if id_ == 0:
                     m.set_new_system()
-                    m.update_direction(rehearsalLetter)
+                    #m.update_direction(rehearsalLetter)
                     m.update_attributes(
                         attribute_division,
                         keyfifths,
@@ -65,8 +67,8 @@ class Musicxml:
                     )
 
                     if  first_measure_post_rehearsalLetter is not None :
-                        print(first_measure_post_rehearsalLetter.attributes, m.attributes)
-                        if  MXMLFunction.is_equal_attribute(first_measure_post_rehearsalLetter.attributes, m.attributes):
+                        #print(first_measure_post_rehearsalLetter.attributes, m.attributes)
+                        if  Notes.is_equal_attribute(first_measure_post_rehearsalLetter.attributes, m.attributes):
                             m.delete_attributes()
 
                     first_measure_post_rehearsalLetter = Measure(bar_id)

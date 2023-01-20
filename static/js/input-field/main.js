@@ -4,31 +4,43 @@ import {
         scale_width,        
         scale_height,
         pitch_range,
+        midinote_bottom,
         pitch_sharpflat,
         beat_range,
         grid_par_measure,
         grid_par_quarter,
-        grid_par_octave,
         start_grid_n,
         next_grids,
-        past_grids
+        past_grids,
+
+        canvas_element_chord,
+        scale_width_chord,
+        scale_height_chord,
+        grid_height_chord,
+        grid_width_chord   
+
     } from './grid.js';
 import { 
     cursor2gridId, 
     gridId2cursor,
     gridId2axis, 
     grid_enable, 
-    get_random
+    get_random,
+
+    cursor2gridId_for_chord,
+    gridId2axis_for_chord
 }  from './grid-funcs.js';
 import { 
     line, 
-    rectangle
+    rectangle,
+    text
 }  from './grid-draw.js';
 import { 
         grid_color, 
         grid_bold_color, 
         note_natural, 
         note_sharp,
+        background_color_odd,
         get_background,
         get_notecolor
     }  from './color.js';
@@ -69,8 +81,9 @@ window.addEventListener("load", canvas);
 
 function canvas(){
     load_canvas();
-    load_pianoroll();
-    load_command();
+    //load_pianoroll();
+    load_chord();
+    //load_command();
 }
 
 function load_command(){
@@ -117,7 +130,7 @@ export const  load_pianoroll = () => {
     //<base grid>
     for(let v = 0; v < pitch_range; v++){
         for(let h = 0; h < beat_range; h++){
-            note_reset(h, v, pianoroll_measure, pitch_sharpflat, grid_par_octave)
+            note_reset(h, v, pianoroll_measure, pitch_sharpflat)
         }
     }    
     //</base grid>
@@ -138,6 +151,20 @@ export const  load_pianoroll = () => {
     canvas_element.addEventListener("mouseup", mouseup);    
     //</mouse>
 
+}
+
+export const load_chord = () => {
+    canvas_element_chord.addEventListener("click", edit_chord);
+
+    var context_chord = canvas_element_chord.getContext("2d");
+
+    for(let x=0; x < beat_range/grid_par_quarter; x++){
+        var [sx, sy, ex, ey] = gridId2axis_for_chord(x)
+        //rectangle(context_chord, sx, sy, ex, ey, background_color_odd, "#000000");
+        text(context_chord, sx, sy, ex, ey, "C♭");
+    }
+
+    
 }
 
 
@@ -163,9 +190,11 @@ function dump_score(){
             }
         }
         for(let h = 0; h < beat_range; h++){
+
             score[v][h+start_grid_n] = pianoroll[v][h];
         }
     }
+
 }
 
 //<mouse event handler>
@@ -219,7 +248,7 @@ function mousedown(e){
     if(grid_enable(pianoroll, grid_id_sx)){
         var note_id = get_random();
         pianoroll[grid_id_sy][grid_id_sx] = note_id;
-        if(pitch_sharpflat[grid_id_sy%grid_par_octave]){
+        if(pitch_sharpflat[grid_id_sy]){
             notes_status_sharpflap[note_id] = note_status_flat
         }else{
             notes_status_sharpflap[note_id] = note_status_natural
@@ -230,7 +259,7 @@ function mousedown(e){
         //すでにONになっている。
         var note_id = pianoroll[grid_id_sy][grid_id_sx];
         if(note_id){
-            if(pitch_sharpflat[grid_id_sy%grid_par_octave]){
+            if(pitch_sharpflat[grid_id_sy]){
                 var status = notes_status_sharpflap[note_id]
                 console.log(status);
                 if(status === note_status_natural ){
@@ -257,6 +286,22 @@ function mousedown(e){
     //</note status change or delete>
 }
 //</mouse event handler>
+
+
+function edit_chord(e){
+    var context_chord = canvas_element_chord.getContext("2d");
+    const rect = e.target.getBoundingClientRect();
+    const viewX = e.clientX - rect.left;
+    //const viewY = e.clientY - rect.top;
+
+    var x = viewX*scale_width_chord;
+    //grid_sy = viewY*scale_height_chord;
+    var grid_id_x = cursor2gridId_for_chord(x);
+    var [sx, sy, ex, ey] = gridId2axis_for_chord(grid_id_x)
+    console.log(grid_id_x);
+    console.log(sx, sy, ex, ey);
+    rectangle(context_chord, sx, sy, ex, ey, background_color_odd, null);
+}
 
 function note_on_by_note_id(note_id, pianoroll, notes_status_sharpflap){
     var context = canvas_element.getContext("2d");    
@@ -310,17 +355,17 @@ function note_off(note_id, pianoroll){
     for(let v = 0; v < pitch_range; v++){
         for(let h = 0; h < beat_range; h++){
             if(pianoroll[v][h]==note_id){
-                note_reset(h, v, pianoroll_measure, pitch_sharpflat, grid_par_octave)
+                note_reset(h, v, pianoroll_measure, pitch_sharpflat)
                 pianoroll[v][h] = null;
             }
         }
     }
 }
 
-function note_reset(h, v, pianoroll_measure, pitch_sharpflat, grid_par_octave){
+function note_reset(h, v, pianoroll_measure, pitch_sharpflat){
     var context = canvas_element.getContext("2d"); 
     var [sx, sy, ex, ey] = gridId2axis(h, v);
-    var background_color = get_background(v, h, pianoroll_measure, pitch_sharpflat, grid_par_octave);
+    var background_color = get_background(v, h, pianoroll_measure, pitch_sharpflat);
     rectangle(context, sx, sy, ex, ey, background_color, grid_color);
     //<vetical>
     if(h%grid_par_quarter == 0){
@@ -334,12 +379,13 @@ function note_reset(h, v, pianoroll_measure, pitch_sharpflat, grid_par_octave){
     //</vetical>
 
     //<horizontal>
-    if(v%grid_par_octave == (grid_par_octave-1)){
+    var midinote_id = (midinote_bottom+12)%12;
+    if(midinote_id == 12 - 1){
         [sx, sy, _, _] = gridId2axis(h, v+1);
         [_, _, ex, ey] = gridId2axis(h, v);
         line(context, sx, sy, ex, ey, grid_bold_color);
     }
-    if(v%grid_par_octave == 0){
+    if(midinote_id == 0){
         [sx, sy, _, _] = gridId2axis(h, v);
         [_, _, ex, ey] = gridId2axis(h, v-1);
         line(context, sx, sy, ex, ey, grid_bold_color);
@@ -348,5 +394,6 @@ function note_reset(h, v, pianoroll_measure, pitch_sharpflat, grid_par_octave){
 }
 
 function execute_save_score(){
-    save_score(score);
+    dump_score();
+    save_score(score, notes_status_sharpflap);
 }

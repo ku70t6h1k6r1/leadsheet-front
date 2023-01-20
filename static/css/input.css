@@ -1,9 +1,23 @@
 #command-field{
     background-color:#c0b994;
     width: 100%;
-    height: 10%;
+    height: 5%;
     color:white;
 }
+
+#chord-field{
+    background-color:#c0b994;
+    width: 100%;
+    height: 5%;
+    color:white;
+}
+#chord{
+    background-color: brown;
+    width:100%;
+    height:100%;
+}
+
+
 
 #pianoroll-field{
     background-color: aqua;
