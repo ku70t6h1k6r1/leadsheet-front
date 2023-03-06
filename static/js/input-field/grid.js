@@ -38,7 +38,7 @@ export var grid_width;
 //</grid base config>
 
 export const load_canvas=()=>{
-    //pianoroll
+    //melody
     canvas_width = canvas_element.clientWidth; //キャンバス実サイズ
     canvas_height = canvas_element.clientHeight;　//キャンバス実サイズ
     scale_width = canvas_element.width/canvas_width;　//　キャンパス仮想サイズ/キャンバス実サイズ

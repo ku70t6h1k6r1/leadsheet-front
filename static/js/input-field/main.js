@@ -73,42 +73,33 @@ var measure_id = 0;
 
 //<status dicts>
 var score_chord = [];
-//var pianoroll_chord = Array(start_grid_n_chord + beat_range_chord);
-//pianoroll_chord.fill(["", ""]);
-var pianoroll_chord = [];
+var workspace_chord = [];
 var score = [];
-var pianoroll = [];
+var workspace_melody = [];
 var notes_status_sharpflap = {};
-var pianoroll_measure=[]
+var workspace_measure=[]
 //</status dicts>
 
 window.addEventListener("load", canvas);
  
 function canvas(){
     load_canvas();
-    load_pianoroll();
+    load_workspace();
     load_chord();
     load_command();
 }
 
-function close_chordmodal() {
-    var modal = document.getElementById('chord-modal');
-    var chordSymbol = document.getElementById("chord-symbol");
-    modal.style.display = 'none';
-    edit_chord(parseInt(chordSymbol.dataset.gridid));
-}
-
-function next_pianoroll(){   
+function next_workspace(){   
     dump_score()
     next_grids()
-    load_pianoroll();
+    load_workspace();
     load_chord();
 }
 
-function past_pianoroll(){   
+function past_workspace(){   
     dump_score()
     past_grids()
-    load_pianoroll();
+    load_workspace();
     load_chord();
 }
 
@@ -122,7 +113,7 @@ function dump_score(){
             }
         }
         for(let h = 0; h < beat_range; h++){
-            score[v][h+start_grid_n] = pianoroll[v][h];
+            score[v][h+start_grid_n] = workspace_melody[v][h];
         }
     }
 
@@ -135,7 +126,7 @@ function dump_score(){
     }
 
     for(let h = 0; h < beat_range_chord; h++){
-        score_chord[h+start_grid_n_chord] = pianoroll_chord[h];
+        score_chord[h+start_grid_n_chord] = workspace_chord[h];
     }
 }
 
@@ -146,43 +137,42 @@ function execute_save_score(){
 
 function load_command(){
     var nextMeasureBtn = document.getElementById("next-measure");
-    nextMeasureBtn.addEventListener('click', next_pianoroll)
+    nextMeasureBtn.addEventListener('click', next_workspace)
     var pastMeasureBtn = document.getElementById("past-measure");
-    pastMeasureBtn.addEventListener('click', past_pianoroll)
+    pastMeasureBtn.addEventListener('click', past_workspace)
     var saveBtn = document.getElementById("save");
     saveBtn.addEventListener('click', execute_save_score);
 
 }
 
-export const load_pianoroll = () => {
+export const load_workspace = () => {
     //Note
     if(score.length == 0){
         for(let v = 0; v < pitch_range; v++){
-            pianoroll[v] = [];
+            workspace_melody[v] = [];
             for(let h = 0; h < beat_range; h++){
-                pianoroll[v][h] = null;
+                workspace_melody[v][h] = null;
             }
         }
     }else{
         for(let v = 0; v < pitch_range; v++){
-            pianoroll[v] = [];
+            workspace_melody[v] = [];
             for(let h = 0; h < beat_range; h++){
                 var h_absolute = h + start_grid_n;
                 if(h_absolute < score[v].length){
-                    pianoroll[v][h] = score[v][h_absolute];
+                    workspace_melody[v][h] = score[v][h_absolute];
 
                 }
             }
         }
     }
 
-
     //<base measure_id>
     for(let v = 0; v < pitch_range; v++){
-        pianoroll_measure[v] = [];
+        workspace_measure[v] = [];
         for(let h = 0; h < beat_range; h++){
             var add_measure_id = Math.floor( (h+start_grid_n) /grid_par_measure);
-            pianoroll_measure[v][h] = measure_id + add_measure_id;
+            workspace_measure[v][h] = measure_id + add_measure_id;
         }
     }  
     //</base measure_id>
@@ -190,7 +180,7 @@ export const load_pianoroll = () => {
     //<base grid>
     for(let v = 0; v < pitch_range; v++){
         for(let h = 0; h < beat_range; h++){
-            note_reset(h, v, pianoroll_measure, pitch_sharpflat)
+            note_reset(h, v, workspace_measure, pitch_sharpflat)
         }
     }    
     //</base grid>
@@ -198,8 +188,8 @@ export const load_pianoroll = () => {
     //<note on>
     for(let v = 0; v < pitch_range; v++){
         for(let h = 0; h < beat_range; h++){
-            if(pianoroll[v][h]){
-                note_on_by_note_id(pianoroll[v][h], pianoroll, notes_status_sharpflap)
+            if(workspace_melody[v][h]){
+                note_on_by_note_id(workspace_melody[v][h], workspace_melody, notes_status_sharpflap)
             }
         }
     }
@@ -216,25 +206,28 @@ export const load_pianoroll = () => {
 export const load_chord = () => {
     const buttonClose = document.getElementsByClassName('modalClose')[0];
     buttonClose.addEventListener('click', close_chordmodal);
+    const buttonSubmit = document.getElementsByClassName('modalSubmit')[0];
+    buttonSubmit.addEventListener('click', submit_chordmodal);
+
+
     canvas_element_chord.addEventListener("click",open_chordmodal);
     var context_chord = canvas_element_chord.getContext("2d");
 
     //Chord
     if(score_chord.length == 0){
-        pianoroll_chord = [];
+        workspace_chord = [];
         for(let h = 0; h < beat_range_chord; h++){
-            pianoroll_chord[h] = ["C", "major"];
+            workspace_chord[h] = null;
         }     
     }else{
-        pianoroll_chord = []; 
+        workspace_chord = []; 
         for(let h = 0; h < beat_range_chord; h++){
             var h_absolute = h + start_grid_n_chord;
             if(score_chord[h_absolute]!==undefined){
-                pianoroll_chord[h] = score_chord[h_absolute];
+                workspace_chord[h] = score_chord[h_absolute];
             }else{
-                pianoroll_chord[h] = null; 
-            }
-           
+                workspace_chord[h] = null; 
+            }      
         }
 
     }    
@@ -243,14 +236,13 @@ export const load_chord = () => {
         var [sx, sy, ex, ey] = gridId2axis_for_chord(x)
         rectangle(context_chord, sx, sy, ex, ey, background_color_odd, "#000000");
         
-        if(pianoroll_chord[x] !== null){
-            text(context_chord, sx, sy, ex, ey, get_chord(pianoroll_chord[x]));
+        if(workspace_chord[x] !== null){
+            text(context_chord, sx, sy, ex, ey, get_chord(workspace_chord[x]));
         }else{
             text(context_chord, sx, sy, ex, ey, "");
         }  
     }
 
-    //display_chordSymbol();
     var select_chord_root = document.getElementById('chord-root');
     select_chord_root.addEventListener('change', display_chordSymbol);
     var select_chord_kind = document.getElementById('chord-kind');
@@ -269,9 +261,9 @@ function open_chordmodal(e) {
     //初期化(同じ要素使い回しているから、毎回初期化が必要)
     var chordSymbol = document.getElementById("chord-symbol");
     chordSymbol.dataset.gridid =  grid_id_x;
-    if(pianoroll_chord[grid_id_x] !== null){
-        chordSymbol.dataset.root = pianoroll_chord[grid_id_x][0];
-        chordSymbol.dataset.kind = pianoroll_chord[grid_id_x][1]; 
+    if(workspace_chord[grid_id_x] !== null){
+        chordSymbol.dataset.root = workspace_chord[grid_id_x][0];
+        chordSymbol.dataset.kind = workspace_chord[grid_id_x][1]; 
         var chordRoot = document.getElementById("chord-root"); 
         chordRoot.value = chordSymbol.dataset.root;
         var chordKind = document.getElementById("chord-kind");
@@ -285,8 +277,25 @@ function open_chordmodal(e) {
         chordSymbol.innerText = `${chordRoot.options[0].innerText}${chordKind.options[0].innerText}`;
 
     }
-
 }
+
+
+function submit_chordmodal() {
+    var modal = document.getElementById('chord-modal');
+    var chordSymbol = document.getElementById("chord-symbol");
+    //if(chordSymbol.dataset.gridid !== ""){
+    var grid_id = parseInt(chordSymbol.dataset.gridid); 
+    workspace_chord[grid_id] = [chordSymbol.dataset.root, chordSymbol.dataset.kind];
+    //}
+    modal.style.display = 'none';
+    edit_chord(parseInt(chordSymbol.dataset.gridid));
+}
+
+function close_chordmodal() {
+    var modal = document.getElementById('chord-modal');
+    modal.style.display = 'none';
+}
+
 
 //<mouse event handler>
 function mousemove(e){
@@ -298,21 +307,21 @@ function mousemove(e){
         
     
         if(grid_id_ex_temp > grid_id_ex){
-            if(grid_enable(pianoroll, grid_id_ex_temp)){
+            if(grid_enable(workspace_melody, grid_id_ex_temp)){
                 grid_ex=grid_ex_temp;
                 [grid_id_ex, _] = cursor2gridId(grid_ex, 0);
             }else{
                 grid_on = false;
             }
         }
-        note_on(grid_sx, grid_sy, grid_ex, grid_ey, pianoroll, notes_status_sharpflap);
+        note_on(grid_sx, grid_sy, grid_ex, grid_ey, workspace_melody, notes_status_sharpflap);
     }
 }
 
 function mouseup(e){
     //<クリックしただけ>
     if(grid_on && grid_sx==grid_ex){
-        note_on(grid_sx, grid_sy, grid_ex, grid_ey, pianoroll, notes_status_sharpflap);
+        note_on(grid_sx, grid_sy, grid_ex, grid_ey, workspace_melody, notes_status_sharpflap);
     }
     //</クリックしただけ>
     grid_on = false;
@@ -335,9 +344,9 @@ function mousedown(e){
 
 
     //<note status change or delete>
-    if(grid_enable(pianoroll, grid_id_sx)){
+    if(grid_enable(workspace_melody, grid_id_sx)){
         var note_id = get_random();
-        pianoroll[grid_id_sy][grid_id_sx] = note_id;
+        workspace_melody[grid_id_sy][grid_id_sx] = note_id;
         if(pitch_sharpflat[grid_id_sy]){
             notes_status_sharpflap[note_id] = note_status_flat
         }else{
@@ -347,7 +356,7 @@ function mousedown(e){
     }else{
         grid_on = false;
         //すでにONになっている。
-        var note_id = pianoroll[grid_id_sy][grid_id_sx];
+        var note_id = workspace_melody[grid_id_sy][grid_id_sx];
         if(note_id){
             if(pitch_sharpflat[grid_id_sy]){
                 var status = notes_status_sharpflap[note_id]
@@ -356,20 +365,20 @@ function mousedown(e){
                     console.log("この条件にはこないはず1")
                 }else if(status === note_status_sharp ){
                     delete notes_status_sharpflap[note_id];
-                    note_off(note_id, pianoroll, notes_status_sharpflap);                
+                    note_off(note_id, workspace_melody, notes_status_sharpflap);                
                 }else if(status === note_status_flat ){
                     notes_status_sharpflap[note_id] = note_status_sharp;
-                    note_on_by_note_id(note_id,  pianoroll, notes_status_sharpflap);
+                    note_on_by_note_id(note_id,  workspace_melody, notes_status_sharpflap);
                 }else if(status === undefined){
                     console.log("この条件にはこないはず2")
                     notes_status_sharpflap[note_id] = note_status_flat;
-                    note_on_by_note_id(note_id,  pianoroll, notes_status_sharpflap);
+                    note_on_by_note_id(note_id,  workspace_melody, notes_status_sharpflap);
                 }else{
                     console.log("この条件にはこないはず3")
                 }
             }else{
                 delete notes_status_sharpflap[note_id]
-                note_off(note_id, pianoroll); 
+                note_off(note_id, workspace_melody); 
             }
         }
     }
@@ -386,8 +395,8 @@ function edit_chord(grid_id_x){
     rectangle(context_chord, sx, sy, ex, ey, background_color_odd, "#000000");
     
     //var beat_id = start_grid_n_chord + grid_id_x;
-    if(pianoroll_chord[grid_id_x] !== null){           
-        text(context_chord, sx, sy, ex, ey, get_chord(pianoroll_chord[grid_id_x]));
+    if(workspace_chord[grid_id_x] !== null){           
+        text(context_chord, sx, sy, ex, ey, get_chord(workspace_chord[grid_id_x]));
     }else{
         text(context_chord, sx, sy, ex, ey, "NULL");
     } 
@@ -404,24 +413,19 @@ function display_chordSymbol(){
     chordSymbol.innerText = `${chordRoot}${chordKind}`;
     chordSymbol.dataset.root = chordRootValue;
     chordSymbol.dataset.kind = chordKindValue;
-
-    if(chordSymbol.dataset.gridid !== ""){
-        var grid_id = parseInt(chordSymbol.dataset.gridid); 
-        pianoroll_chord[grid_id] = [chordRootValue, chordKindValue];
-    }
 }
 
-function note_on_by_note_id(note_id, pianoroll, notes_status_sharpflap){
+function note_on_by_note_id(note_id, workspace_melody, notes_status_sharpflap){
     var context = canvas_element.getContext("2d");    
     var grid_id_sx_temp = null;
     var grid_id_sy_temp = null;
     var grid_id_ex_temp = null;
     var grid_id_ey_temp = null;
 
-    //<manage pianoroll>
+    //<manage workspace>
     for(let v = 0; v < pitch_range; v++){
         for(let h = 0; h < beat_range; h++){
-            if(pianoroll[v][h]==note_id){
+            if(workspace_melody[v][h]==note_id){
                 if(grid_id_sx_temp===null){
                     grid_id_sx_temp = h;
                     grid_id_sy_temp = v;
@@ -431,7 +435,7 @@ function note_on_by_note_id(note_id, pianoroll, notes_status_sharpflap){
             }
         }
     }
-    //</manage pianoroll>
+    //</manage workspace>
 
     var [sx, sy, _, _] = gridId2axis(grid_id_sx_temp, grid_id_sy_temp);
     var [_, _, ex, ey] = gridId2axis(grid_id_ex_temp, grid_id_ey_temp);
@@ -439,41 +443,41 @@ function note_on_by_note_id(note_id, pianoroll, notes_status_sharpflap){
     rectangle(context, sx, sy, ex, ey, note_color, null);
 }
 
-function note_on(sx_cursor, sy_cursor, ex_cursor, ey_cursor, pianoroll, notes_status_sharpflap){
+function note_on(sx_cursor, sy_cursor, ex_cursor, ey_cursor, workspace_melody, notes_status_sharpflap){
     var context = canvas_element.getContext("2d");    
     var [grid_sx_id, grid_sy_id] = cursor2gridId(sx_cursor, sy_cursor);
     var [grid_ex_id, grid_ey_id] = cursor2gridId(ex_cursor, ey_cursor);
     var [sx, sy, _, _] = gridId2axis(grid_sx_id, grid_sy_id);
     var [_, _, ex, ey] = gridId2axis(grid_ex_id, grid_ey_id);
 
-    var note_id = pianoroll[grid_sy_id][grid_sx_id]
+    var note_id = workspace_melody[grid_sy_id][grid_sx_id]
     
     for(let y=grid_sy_id; y<=grid_ey_id; y++){
         for(let x=grid_sx_id; x<=grid_ex_id; x++){
-            pianoroll[y][x]=note_id
+            workspace_melody[y][x]=note_id
         }
     }
-    //</manage pianoroll>
+    //</manage workspace>
 
     var note_color = get_notecolor(notes_status_sharpflap[note_id]);
     rectangle(context, sx, sy, ex, ey, note_color, null);
 }
 
-function note_off(note_id, pianoroll){
+function note_off(note_id, workspace_melody){
     for(let v = 0; v < pitch_range; v++){
         for(let h = 0; h < beat_range; h++){
-            if(pianoroll[v][h]==note_id){
-                note_reset(h, v, pianoroll_measure, pitch_sharpflat)
-                pianoroll[v][h] = null;
+            if(workspace_melody[v][h]==note_id){
+                note_reset(h, v, workspace_measure, pitch_sharpflat)
+                workspace_melody[v][h] = null;
             }
         }
     }
 }
 
-function note_reset(h, v, pianoroll_measure, pitch_sharpflat){
+function note_reset(h, v, workspace_measure, pitch_sharpflat){
     var context = canvas_element.getContext("2d"); 
     var [sx, sy, ex, ey] = gridId2axis(h, v);
-    var background_color = get_background(v, h, pianoroll_measure, pitch_sharpflat);
+    var background_color = get_background(v, h, workspace_measure, pitch_sharpflat);
     rectangle(context, sx, sy, ex, ey, background_color, grid_color);
     //<vetical>
     if(h%grid_par_quarter == 0){

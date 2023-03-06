@@ -54,10 +54,10 @@ export const gridId2axis=(grid_x_id, grid_y_id)=>{
     return [sx, sy, ex, ey]
 }
 
-export const grid_enable=(pianoroll, grid_x_id)=>{
+export const grid_enable=(workspace, grid_x_id)=>{
     var enable = true;
     for(let v = 0; v < pitch_range; v++){
-        if (pianoroll[v][grid_x_id] != null){
+        if (workspace[v][grid_x_id] != null){
             enable = false;
             break
         }

@@ -14,10 +14,10 @@ export var note_natural = "#5B37CC";
 export var note_sharp = "#E33059";
 
 
-export const  get_background=(v, h, pianoroll_measure, pitch_sharpflat)=>{
+export const  get_background=(v, h, workspace_measure, pitch_sharpflat)=>{
     var background_color;
 
-    if(pianoroll_measure[v][h]%2 == 0){
+    if(workspace_measure[v][h]%2 == 0){
         if(pitch_sharpflat[v]){
             background_color = background_color_sharpflat_even 
         }else{
