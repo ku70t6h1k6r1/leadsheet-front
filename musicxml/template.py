@@ -55,6 +55,31 @@ class Const:
             self.diminished = "diminished"
             self.augmented = "augmented"
 
+            self.roots = [
+                "C", "C#", "D♭", "D", "D#", "E♭", "E", "F", "F#", "G♭", "G", "G#", "A♭", "A", "A#", "B♭", "B"
+            ]
+
+            self.symbols_tetrad = [
+                ["majorSeventh" , "Δ7"],
+                ["minorSeventh" , "m7"],
+                ["majorMinor" , "mΔ7"],
+                ["dominant" , "7"],
+                ["dominant-11th" , "7sus4"],
+                ["diminished-seventh" , "o"],
+                ["half-diminished" , "ø"],
+                ["augmented-seventh" ,"+7"]
+            ]
+
+            self.symbols_triad = [
+                ["major" , "Δ"],
+                ["minor" , "m"],
+                ["suspendedFourth" , "sus4"],
+                ["suspendedSecond" , "sus2"],                
+                ["diminished" , "oΔ"],
+                ["augmented" , "+"]   
+            ]
+
+
     class Part_Melody:
         def __init__(
             self, 

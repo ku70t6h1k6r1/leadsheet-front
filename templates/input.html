@@ -13,10 +13,45 @@
 <div id="pianoroll-field">
     <canvas id="pianoroll" width="2700";  height="2700" ></canvas>
 </div>
+
+<div id="chord-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h1>Chord</h1>
+            <span class="modalClose">×</span>
+        </div>
+        <div class="modal-body">
+            <label for="chord-root">Root</label>
+            <select name="root" id="chord-root" >
+                <option value="">(void)</option>
+                {% for r in roots %}
+                    <option value="{{r}}">{{r}}</option>
+                {% endfor %}
+            </select>
+
+            <label for="chord-kind">Kind</label>
+            <select name="kind" id="chord-kind">
+                <option value="">(void)</option>
+                <optgroup label="Tetrad">
+                    {% for name, symbol in symbols_tetrad %}
+                        <option value="{{name}}">{{symbol}}</option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Triad">
+                    {% for name, symbol in symbols_triad %}
+                        <option value="{{name}}">{{symbol}}</option>
+                    {% endfor %}
+                </optgroup>
+            </select>
+            <span id="chord-symbol" data-root="" data-kind="" data-gridid="" ></span>
+        </div>
+    </div>
+</div>
+
+
 <input type="hidden" name="note" id="note">
-
-
 <script type="module" src="{{ url_for('static', filename='js/input-field/main.js') }}"></script>
+
 
 <!--ICONのやつ-->
 <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>

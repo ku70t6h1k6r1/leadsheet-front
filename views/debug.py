@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from musicxml.musicxml import Musicxml 
+from musicxml.template import Const
 from flask import Flask, request, make_response, jsonify, render_template,redirect, url_for, session
 import json
 
@@ -14,7 +15,17 @@ class Debug:
 
         @app.route("/input")
         def input():
-            return render_template('input.html')
+
+            roots = Const.harmony.roots
+            symbols_tetrad = Const.harmony.symbols_tetrad
+            symbols_triad = Const.harmony.symbols_triad
+
+            return render_template(
+                'input.html', 
+                roots=roots, 
+                symbols_tetrad=symbols_tetrad,
+                symbols_triad=symbols_triad,
+                )
 
         @app.route("/input-api", methods=['GET', 'POST'])
         def inputApi():

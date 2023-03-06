@@ -3,7 +3,7 @@ import {
     grid_width,
     pitch_range,
     beat_range,
-    grid_par_quarter,
+    beat_range_chord,
     grid_height_chord,
     grid_width_chord
 } from './grid.js';
@@ -82,7 +82,7 @@ export const get_pitch_sharpflat=(midinote_bottom, pitch_range)=>{
 export const cursor2gridId_for_chord=(x_cursor)=>{
     var grid_x_id = 0;
 
-    for(let h = 0; h < parseInt(beat_range/grid_par_quarter); h++){
+    for(let h = 0; h < beat_range_chord; h++){
         if((grid_x_id+1)*grid_width_chord<x_cursor){
             grid_x_id += 1;
         }else{
@@ -102,4 +102,39 @@ export const gridId2axis_for_chord=(grid_x_id)=>{
     var ey = (grid_y_id+1)*grid_height_chord;
 
     return [sx, sy, ex, ey]
+}
+
+export const get_chord=(content)=>{
+    var root = chordRoot_by_rootId(content[0]);
+    var kind = chordSymbol_by_kindname(content[1]);
+
+    return `${root}${kind}`
+}
+
+export const chordSymbol_by_kindname=(kindname)=>{
+    var chordKind = document.getElementById("chord-kind");
+    var options = chordKind.options;
+    var chordSymbol = null;
+    for(let i = 0; i < options.length; i++ ){
+        if(options[i].value == kindname ){
+            chordSymbol = options[i].innerText; 
+            break
+        }
+    }
+
+    return chordSymbol;
+}
+
+export const chordRoot_by_rootId=(roortId)=>{
+    var chordRoot = document.getElementById("chord-root");
+    var options = chordRoot.options;
+    var chordRoot = null;
+    for(let i = 0; i < options.length; i++ ){
+        if(options[i].value == roortId ){
+            chordRoot = options[i].innerText; 
+            break
+        }
+    }
+
+    return chordRoot;
 }

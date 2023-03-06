@@ -7,9 +7,11 @@ import {
         midinote_bottom,
         pitch_sharpflat,
         beat_range,
+        beat_range_chord,
         grid_par_measure,
         grid_par_quarter,
         start_grid_n,
+        start_grid_n_chord,
         next_grids,
         past_grids,
 
@@ -28,7 +30,8 @@ import {
     get_random,
 
     cursor2gridId_for_chord,
-    gridId2axis_for_chord
+    gridId2axis_for_chord,
+    get_chord
 }  from './grid-funcs.js';
 import { 
     line, 
@@ -69,21 +72,76 @@ var note_status_default = note_status_flat;
 var measure_id = 0;
 
 //<status dicts>
+var score_chord = [];
+//var pianoroll_chord = Array(start_grid_n_chord + beat_range_chord);
+//pianoroll_chord.fill(["", ""]);
+var pianoroll_chord = [];
 var score = [];
 var pianoroll = [];
 var notes_status_sharpflap = {};
 var pianoroll_measure=[]
 //</status dicts>
 
-
 window.addEventListener("load", canvas);
  
-
 function canvas(){
     load_canvas();
-    //load_pianoroll();
+    load_pianoroll();
     load_chord();
-    //load_command();
+    load_command();
+}
+
+function close_chordmodal() {
+    var modal = document.getElementById('chord-modal');
+    var chordSymbol = document.getElementById("chord-symbol");
+    modal.style.display = 'none';
+    edit_chord(parseInt(chordSymbol.dataset.gridid));
+}
+
+function next_pianoroll(){   
+    dump_score()
+    next_grids()
+    load_pianoroll();
+    load_chord();
+}
+
+function past_pianoroll(){   
+    dump_score()
+    past_grids()
+    load_pianoroll();
+    load_chord();
+}
+
+function dump_score(){
+    //Note
+    for(let v = 0; v < pitch_range; v++){
+        if(score.length <= v ){
+            score[v] = [];
+            for(let i=0; i < start_grid_n; i++){
+                score[v][i] = null;
+            }
+        }
+        for(let h = 0; h < beat_range; h++){
+            score[v][h+start_grid_n] = pianoroll[v][h];
+        }
+    }
+
+    //Chord
+    //----initialize
+    if(score_chord.length == 0){
+        for(let i=0; i < start_grid_n_chord; i++){
+            score_chord[i] = null;
+        }          
+    }
+
+    for(let h = 0; h < beat_range_chord; h++){
+        score_chord[h+start_grid_n_chord] = pianoroll_chord[h];
+    }
+}
+
+function execute_save_score(){
+    dump_score();
+    save_score(score, notes_status_sharpflap);
 }
 
 function load_command(){
@@ -96,7 +154,8 @@ function load_command(){
 
 }
 
-export const  load_pianoroll = () => {
+export const load_pianoroll = () => {
+    //Note
     if(score.length == 0){
         for(let v = 0; v < pitch_range; v++){
             pianoroll[v] = [];
@@ -116,6 +175,7 @@ export const  load_pianoroll = () => {
             }
         }
     }
+
 
     //<base measure_id>
     for(let v = 0; v < pitch_range; v++){
@@ -154,45 +214,76 @@ export const  load_pianoroll = () => {
 }
 
 export const load_chord = () => {
-    canvas_element_chord.addEventListener("click", edit_chord);
-
+    const buttonClose = document.getElementsByClassName('modalClose')[0];
+    buttonClose.addEventListener('click', close_chordmodal);
+    canvas_element_chord.addEventListener("click",open_chordmodal);
     var context_chord = canvas_element_chord.getContext("2d");
 
-    for(let x=0; x < beat_range/grid_par_quarter; x++){
+    //Chord
+    if(score_chord.length == 0){
+        pianoroll_chord = [];
+        for(let h = 0; h < beat_range_chord; h++){
+            pianoroll_chord[h] = ["C", "major"];
+        }     
+    }else{
+        pianoroll_chord = []; 
+        for(let h = 0; h < beat_range_chord; h++){
+            var h_absolute = h + start_grid_n_chord;
+            if(score_chord[h_absolute]!==undefined){
+                pianoroll_chord[h] = score_chord[h_absolute];
+            }else{
+                pianoroll_chord[h] = null; 
+            }
+           
+        }
+
+    }    
+    
+    for(let x=0; x < beat_range_chord; x++){
         var [sx, sy, ex, ey] = gridId2axis_for_chord(x)
-        //rectangle(context_chord, sx, sy, ex, ey, background_color_odd, "#000000");
-        text(context_chord, sx, sy, ex, ey, "C♭");
+        rectangle(context_chord, sx, sy, ex, ey, background_color_odd, "#000000");
+        
+        if(pianoroll_chord[x] !== null){
+            text(context_chord, sx, sy, ex, ey, get_chord(pianoroll_chord[x]));
+        }else{
+            text(context_chord, sx, sy, ex, ey, "");
+        }  
     }
 
-    
+    //display_chordSymbol();
+    var select_chord_root = document.getElementById('chord-root');
+    select_chord_root.addEventListener('change', display_chordSymbol);
+    var select_chord_kind = document.getElementById('chord-kind');
+    select_chord_kind.addEventListener('change', display_chordSymbol );
 }
 
+function open_chordmodal(e) {
+    var modal = document.getElementById('chord-modal');
+    modal.style.display = 'block';
+    const rect = e.target.getBoundingClientRect();
+    const viewX = e.clientX - rect.left;
 
-function next_pianoroll(){   
-    dump_score()
-    next_grids()
-    load_pianoroll();
-}
+    var x = viewX*scale_width_chord;
+    var grid_id_x = cursor2gridId_for_chord(x);
 
-function past_pianoroll(){   
-    dump_score()
-    past_grids()
-    load_pianoroll();
-}
+    //初期化(同じ要素使い回しているから、毎回初期化が必要)
+    var chordSymbol = document.getElementById("chord-symbol");
+    chordSymbol.dataset.gridid =  grid_id_x;
+    if(pianoroll_chord[grid_id_x] !== null){
+        chordSymbol.dataset.root = pianoroll_chord[grid_id_x][0];
+        chordSymbol.dataset.kind = pianoroll_chord[grid_id_x][1]; 
+        var chordRoot = document.getElementById("chord-root"); 
+        chordRoot.value = chordSymbol.dataset.root;
+        var chordKind = document.getElementById("chord-kind");
+        chordKind.value = chordSymbol.dataset.kind;
+        chordSymbol.innerText = `${chordRoot.options[chordRoot.selectedIndex].innerText}${chordKind.options[chordKind.selectedIndex].innerText}`;
+    }else{
+        var chordRoot = document.getElementById("chord-root"); 
+        chordRoot.value = chordRoot.options[0].value;
+        var chordKind = document.getElementById("chord-kind");
+        chordKind.value = chordKind.options[0].value;
+        chordSymbol.innerText = `${chordRoot.options[0].innerText}${chordKind.options[0].innerText}`;
 
-
-function dump_score(){
-    for(let v = 0; v < pitch_range; v++){
-        if(score.length <= v ){
-            score[v] = [];
-            for(let i=0; i < start_grid_n; i++){
-                score[v][i] = null;
-            }
-        }
-        for(let h = 0; h < beat_range; h++){
-
-            score[v][h+start_grid_n] = pianoroll[v][h];
-        }
     }
 
 }
@@ -215,7 +306,6 @@ function mousemove(e){
             }
         }
         note_on(grid_sx, grid_sy, grid_ex, grid_ey, pianoroll, notes_status_sharpflap);
-
     }
 }
 
@@ -288,19 +378,37 @@ function mousedown(e){
 //</mouse event handler>
 
 
-function edit_chord(e){
+function edit_chord(grid_id_x){
+    var chordRoot = document.getElementById("chord-root"); 
+    
     var context_chord = canvas_element_chord.getContext("2d");
-    const rect = e.target.getBoundingClientRect();
-    const viewX = e.clientX - rect.left;
-    //const viewY = e.clientY - rect.top;
-
-    var x = viewX*scale_width_chord;
-    //grid_sy = viewY*scale_height_chord;
-    var grid_id_x = cursor2gridId_for_chord(x);
     var [sx, sy, ex, ey] = gridId2axis_for_chord(grid_id_x)
-    console.log(grid_id_x);
-    console.log(sx, sy, ex, ey);
-    rectangle(context_chord, sx, sy, ex, ey, background_color_odd, null);
+    rectangle(context_chord, sx, sy, ex, ey, background_color_odd, "#000000");
+    
+    //var beat_id = start_grid_n_chord + grid_id_x;
+    if(pianoroll_chord[grid_id_x] !== null){           
+        text(context_chord, sx, sy, ex, ey, get_chord(pianoroll_chord[grid_id_x]));
+    }else{
+        text(context_chord, sx, sy, ex, ey, "NULL");
+    } 
+}
+
+function display_chordSymbol(){
+    var chordRootSelect = document.getElementById("chord-root");
+    var chordRoot = chordRootSelect.options[chordRootSelect.selectedIndex].text;
+    var chordRootValue = chordRootSelect.options[chordRootSelect.selectedIndex].value;
+    var chordKindSelect = document.getElementById("chord-kind");
+    var chordKind = chordKindSelect.options[chordKindSelect.selectedIndex].text;
+    var chordKindValue = chordKindSelect.options[chordKindSelect.selectedIndex].value;
+    var chordSymbol = document.getElementById("chord-symbol");
+    chordSymbol.innerText = `${chordRoot}${chordKind}`;
+    chordSymbol.dataset.root = chordRootValue;
+    chordSymbol.dataset.kind = chordKindValue;
+
+    if(chordSymbol.dataset.gridid !== ""){
+        var grid_id = parseInt(chordSymbol.dataset.gridid); 
+        pianoroll_chord[grid_id] = [chordRootValue, chordKindValue];
+    }
 }
 
 function note_on_by_note_id(note_id, pianoroll, notes_status_sharpflap){
@@ -391,9 +499,4 @@ function note_reset(h, v, pianoroll_measure, pitch_sharpflat){
         line(context, sx, sy, ex, ey, grid_bold_color);
     }
     //</horizontal>
-}
-
-function execute_save_score(){
-    dump_score();
-    save_score(score, notes_status_sharpflap);
 }

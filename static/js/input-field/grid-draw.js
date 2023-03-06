@@ -31,5 +31,6 @@ export const text = (context, sx,sy, ex, ey, displayText) => {
     context.textAlign = "left";
     context.textBaseline = "ideographic" 
     context.font = `${80}pt serif` //cavasのheightに依存する。
+    context.fillStyle = '#6080A0';
     context.fillText(displayText, sx, ey);
 };
