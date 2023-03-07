@@ -6,6 +6,10 @@
     <ion-icon id="save" class="icon" name="checkmark-outline"></ion-icon>
 </div>
 
+<div id="rehearsal-field">
+    <canvas id="rehearsal" width="2700";  height="150" ></canvas>
+</div>
+
 <div id="chord-field">
     <canvas id="chord" width="2700";  height="150" ></canvas>
 </div>
@@ -48,6 +52,26 @@
         </div>
     </div>
 </div>
+
+<div id="rehearsal-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h1>Reheasal</h1>
+            <span class="modalClose">×</span>
+        </div>
+        <div class="modal-body">
+            <label for="rehearsal-mark">Rehearsal Mark</label>
+            <select name="root" id="rehearsal-mark" >
+                {% for rm in rehearsalMarks %}
+                    <option value="{{rm}}">{{rm}}</option>
+                {% endfor %}
+            </select>
+            <span id="rehearsal-mark-symbol" data-rehearsal="" data-gridid="" ></span>
+            <input class="modalSubmit" type="submit" value="submit" />
+        </div>
+    </div>
+</div>
+
 
 
 <input type="hidden" name="note" id="note">

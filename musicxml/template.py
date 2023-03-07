@@ -78,7 +78,31 @@ class Const:
                 ["diminished" , "oΔ"],
                 ["augmented" , "+"]   
             ]
+    class RehearsalMark:
+        def __init__(self):
+            self.a = "A"
+            self.b = "B"
+            self.c = "C"
+            self.d = "D"
+            self.e = "E"
+            self.interlude = "Interlude"
+            self.vamp = "Vamp"
+            self.intro = "Intro"
+            self.outro = "Outro"
+            self.auftakt = "Auftakt"
 
+            self.rehearsal_mark_list = [
+                self.a,
+                self.b,
+                self.c,
+                self.d,
+                self.e,
+                self.interlude,
+                self.vamp,
+                self.intro,
+                self.outro,
+                self.auftakt
+            ]
 
     class Part_Melody:
         def __init__(
@@ -107,6 +131,7 @@ class Const:
         self.beam = self.Beam()
         self.partMelody = self.Part_Melody()
         self.note = self.Note()
+        self.rehearsalMark = self.RehearsalMark()
 
 Const = Const()
 

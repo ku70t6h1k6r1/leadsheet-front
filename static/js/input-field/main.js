@@ -1,5 +1,8 @@
 import {
         load_canvas,
+        next_grids,
+        past_grids,
+
         canvas_element,
         scale_width,        
         scale_height,
@@ -7,20 +10,25 @@ import {
         midinote_bottom,
         pitch_sharpflat,
         beat_range,
-        beat_range_chord,
         grid_par_measure,
         grid_par_quarter,
         start_grid_n,
-        start_grid_n_chord,
-        next_grids,
-        past_grids,
 
+        beat_range_chord,
+        start_grid_n_chord,
         canvas_element_chord,
         scale_width_chord,
         scale_height_chord,
         grid_height_chord,
-        grid_width_chord   
+        grid_width_chord,
 
+        beat_range_rehearsal,
+        start_grid_n_rehearsal,
+        canvas_element_rehearsal,
+        scale_width_rehearsal,
+        scale_height_rehearsal,
+        grid_height_rehearsal,
+        grid_width_rehearsal  
     } from './grid.js';
 import { 
     cursor2gridId, 
@@ -31,8 +39,13 @@ import {
 
     cursor2gridId_for_chord,
     gridId2axis_for_chord,
-    get_chord
-}  from './grid-funcs.js';
+    get_chord,
+    display_chordSymbol,
+
+    cursor2gridId_for_rehearsal,
+    gridId2axis_for_rehearsal,
+    display_rehearsalMark
+}  from './funcs.js';
 import { 
     line, 
     rectangle,
@@ -74,6 +87,10 @@ var measure_id = 0;
 //<status dicts>
 var score_chord = [];
 var workspace_chord = [];
+
+var score_rehearsal = []; 
+var workspace_rehearsal = [];
+
 var score = [];
 var workspace_melody = [];
 var notes_status_sharpflap = {};
@@ -87,6 +104,7 @@ function canvas(){
     load_workspace();
     load_chord();
     load_command();
+    load_reheasal();
 }
 
 function next_workspace(){   
@@ -94,6 +112,7 @@ function next_workspace(){
     next_grids()
     load_workspace();
     load_chord();
+    load_reheasal();
 }
 
 function past_workspace(){   
@@ -101,6 +120,12 @@ function past_workspace(){
     past_grids()
     load_workspace();
     load_chord();
+    load_reheasal();
+}
+
+function execute_save_score(){
+    dump_score();
+    save_score(score, notes_status_sharpflap);
 }
 
 function dump_score(){
@@ -118,7 +143,6 @@ function dump_score(){
     }
 
     //Chord
-    //----initialize
     if(score_chord.length == 0){
         for(let i=0; i < start_grid_n_chord; i++){
             score_chord[i] = null;
@@ -128,12 +152,20 @@ function dump_score(){
     for(let h = 0; h < beat_range_chord; h++){
         score_chord[h+start_grid_n_chord] = workspace_chord[h];
     }
+
+    //Rehearsal
+    if(score_rehearsal.length == 0){
+        for(let i=0; i < start_grid_n_rehearsal; i++){
+            score_rehearsal[i] = null;
+        }          
+    }
+
+    for(let h = 0; h < beat_range_rehearsal; h++){
+        score_rehearsal[h+start_grid_n_rehearsal] = workspace_rehearsal[h];
+    }
+
 }
 
-function execute_save_score(){
-    dump_score();
-    save_score(score, notes_status_sharpflap);
-}
 
 function load_command(){
     var nextMeasureBtn = document.getElementById("next-measure");
@@ -249,6 +281,53 @@ export const load_chord = () => {
     select_chord_kind.addEventListener('change', display_chordSymbol );
 }
 
+export const load_reheasal = () => {
+    const buttonClose = document.getElementsByClassName('modalClose')[1];
+    buttonClose.addEventListener('click', close_rehearsalmodal);
+    const buttonSubmit = document.getElementsByClassName('modalSubmit')[1];
+    buttonSubmit.addEventListener('click', submit_rehearsalmodal);
+
+    canvas_element_rehearsal.addEventListener("click",open_rehearsalmodal);
+    var context_rehearsal = canvas_element_rehearsal.getContext("2d");
+
+
+    //Rehearsal
+    if(score_rehearsal.length == 0){
+        workspace_rehearsal = [];
+        for(let h = 0; h < beat_range_rehearsal; h++){
+            workspace_rehearsal[h] = null;
+        }     
+    }else{
+        workspace_rehearsal = []; 
+        for(let h = 0; h < beat_range_rehearsal; h++){
+            var h_absolute = h + start_grid_n_rehearsal;
+            if(score_rehearsal[h_absolute]!==undefined){
+                workspace_rehearsal[h] = score_rehearsal[h_absolute];
+            }else{
+                workspace_rehearsal[h] = null; 
+            }      
+        }
+
+    }    
+    
+    for(let x=0; x < beat_range_rehearsal; x++){
+        var [sx, sy, ex, ey] = gridId2axis_for_rehearsal(x)
+        rectangle(context_rehearsal, sx, sy, ex, ey, background_color_odd, "#FF0000");
+        
+        if(workspace_rehearsal[x] !== null){
+            text(context_rehearsal, sx, sy, ex, ey, workspace_rehearsal[x]);
+        }else{
+            text(context_rehearsal, sx, sy, ex, ey, "");
+        }  
+    }
+
+    var select_rehearsal_mark = document.getElementById('rehearsal-mark');
+    select_rehearsal_mark.addEventListener('change', display_rehearsalMark);
+}
+
+///////////////////////
+/* <Event handler> 系*/
+///////////////////////
 function open_chordmodal(e) {
     var modal = document.getElementById('chord-modal');
     modal.style.display = 'block';
@@ -275,20 +354,16 @@ function open_chordmodal(e) {
         var chordKind = document.getElementById("chord-kind");
         chordKind.value = chordKind.options[0].value;
         chordSymbol.innerText = `${chordRoot.options[0].innerText}${chordKind.options[0].innerText}`;
-
     }
 }
-
 
 function submit_chordmodal() {
     var modal = document.getElementById('chord-modal');
     var chordSymbol = document.getElementById("chord-symbol");
-    //if(chordSymbol.dataset.gridid !== ""){
     var grid_id = parseInt(chordSymbol.dataset.gridid); 
     workspace_chord[grid_id] = [chordSymbol.dataset.root, chordSymbol.dataset.kind];
-    //}
     modal.style.display = 'none';
-    edit_chord(parseInt(chordSymbol.dataset.gridid));
+    draw_chord(parseInt(chordSymbol.dataset.gridid));
 }
 
 function close_chordmodal() {
@@ -296,8 +371,48 @@ function close_chordmodal() {
     modal.style.display = 'none';
 }
 
+function open_rehearsalmodal(e) {
+    var modal = document.getElementById('rehearsal-modal');
+    modal.style.display = 'block';
+    const rect = e.target.getBoundingClientRect();
+    const viewX = e.clientX - rect.left;
 
-//<mouse event handler>
+    var x = viewX*scale_width_rehearsal;
+    var grid_id_x = cursor2gridId_for_rehearsal(x);
+    console.log("open_rehearsalmodal", grid_id_x)
+
+    //初期化(同じ要素使い回しているから、毎回初期化が必要)
+    var rehearsalMark = document.getElementById("rehearsal-mark-symbol");
+    rehearsalMark.dataset.gridid =  grid_id_x;
+    if(workspace_rehearsal[grid_id_x] !== null){
+        rehearsalMark.dataset.rehearsal = workspace_rehearsal[grid_id_x];
+        var rehearsalMarkSelect = document.getElementById("rehearsal-mark"); 
+        rehearsalMarkSelect.value = rehearsalMark.dataset.rehearsal;
+        rehearsalMark.innerText = rehearsalMarkSelect.options[rehearsalMarkSelect.selectedIndex].innerText
+    }else{
+        var rehearsalMarkSelect = document.getElementById("rehearsal-mark"); 
+        rehearsalMarkSelect.value = rehearsalMarkSelect.options[0].value;
+        rehearsalMark.innerText = rehearsalMarkSelect.options[rehearsalMarkSelect.selectedIndex].innerText
+    }
+}
+
+function submit_rehearsalmodal(){
+    var modal = document.getElementById('rehearsal-modal');
+    var rehearsalSymbol = document.getElementById("rehearsal-mark-symbol");
+    var grid_id = parseInt(rehearsalSymbol.dataset.gridid); 
+    workspace_rehearsal[grid_id] = rehearsalSymbol.dataset.rehearsal;
+    modal.style.display = 'none';
+    draw_rehearsal(grid_id);
+    console.log("submit_rehearsalmodal", grid_id);
+
+}
+
+function close_rehearsalmodal() {
+    var modal = document.getElementById('rehearsal-modal');
+    modal.style.display = 'none';
+}
+
+
 function mousemove(e){
    if(grid_on){
         const rect = e.target.getBoundingClientRect();
@@ -384,17 +499,20 @@ function mousedown(e){
     }
     //</note status change or delete>
 }
-//</mouse event handler>
+////////////////////////
+/* </Event handler> 系*/
+////////////////////////
 
-
-function edit_chord(grid_id_x){
-    var chordRoot = document.getElementById("chord-root"); 
+/////////////
+/* <描写系>*/
+/////////////
+function draw_chord(grid_id_x){
+    //var chordRoot = document.getElementById("chord-root"); 
     
     var context_chord = canvas_element_chord.getContext("2d");
     var [sx, sy, ex, ey] = gridId2axis_for_chord(grid_id_x)
     rectangle(context_chord, sx, sy, ex, ey, background_color_odd, "#000000");
     
-    //var beat_id = start_grid_n_chord + grid_id_x;
     if(workspace_chord[grid_id_x] !== null){           
         text(context_chord, sx, sy, ex, ey, get_chord(workspace_chord[grid_id_x]));
     }else{
@@ -402,18 +520,22 @@ function edit_chord(grid_id_x){
     } 
 }
 
-function display_chordSymbol(){
-    var chordRootSelect = document.getElementById("chord-root");
-    var chordRoot = chordRootSelect.options[chordRootSelect.selectedIndex].text;
-    var chordRootValue = chordRootSelect.options[chordRootSelect.selectedIndex].value;
-    var chordKindSelect = document.getElementById("chord-kind");
-    var chordKind = chordKindSelect.options[chordKindSelect.selectedIndex].text;
-    var chordKindValue = chordKindSelect.options[chordKindSelect.selectedIndex].value;
-    var chordSymbol = document.getElementById("chord-symbol");
-    chordSymbol.innerText = `${chordRoot}${chordKind}`;
-    chordSymbol.dataset.root = chordRootValue;
-    chordSymbol.dataset.kind = chordKindValue;
+function draw_rehearsal(grid_id_x){
+    var context_rehearsal = canvas_element_rehearsal.getContext("2d");
+    var [sx, sy, ex, ey] = gridId2axis_for_rehearsal(grid_id_x)
+    rectangle(context_rehearsal, sx, sy, ex, ey, background_color_odd, "#000000");
+    
+    if(workspace_rehearsal[grid_id_x] !== null){           
+        console.log("draw_rehearsal", "TRUE")
+        text(context_rehearsal, sx, sy, ex, ey, workspace_rehearsal[grid_id_x]);
+    }else{
+        console.log("draw_rehearsal", "FALSE")
+        text(context_rehearsal, sx, sy, ex, ey, "NULL");
+    } 
+
+    console.log("draw_rehearsal", grid_id_x)
 }
+
 
 function note_on_by_note_id(note_id, workspace_melody, notes_status_sharpflap){
     var context = canvas_element.getContext("2d");    
@@ -504,3 +626,6 @@ function note_reset(h, v, workspace_measure, pitch_sharpflat){
     }
     //</horizontal>
 }
+/////////////
+/* </描写系>*/
+/////////////

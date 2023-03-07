@@ -1,11 +1,17 @@
 import {
+    pitch_range,
+    
+    beat_range,
     grid_height,
     grid_width,
-    pitch_range,
-    beat_range,
+    
     beat_range_chord,
     grid_height_chord,
-    grid_width_chord
+    grid_width_chord,
+
+    beat_range_rehearsal,
+    grid_height_rehearsal,
+    grid_width_rehearsal,
 } from './grid.js';
 
 
@@ -78,7 +84,6 @@ export const get_pitch_sharpflat=(midinote_bottom, pitch_range)=>{
     return pitch_sharpflat_rev
 }
 
-
 export const cursor2gridId_for_chord=(x_cursor)=>{
     var grid_x_id = 0;
 
@@ -92,14 +97,35 @@ export const cursor2gridId_for_chord=(x_cursor)=>{
     return grid_x_id
 }
 
+export const cursor2gridId_for_rehearsal=(x_cursor)=>{
+    var grid_x_id = 0;
+
+    for(let h = 0; h < beat_range_rehearsal; h++){
+        if((grid_x_id+1)*grid_width_rehearsal<x_cursor){
+            grid_x_id += 1;
+        }else{
+            break
+        }
+    }
+    return grid_x_id
+}
 
 export const gridId2axis_for_chord=(grid_x_id)=>{
-    //console.log(grid_width, grid_height)
     var grid_y_id  = 0;
     var sx = grid_x_id*grid_width_chord;
     var sy = grid_y_id*grid_height_chord;
     var ex = (grid_x_id+1)*grid_width_chord;
     var ey = (grid_y_id+1)*grid_height_chord;
+
+    return [sx, sy, ex, ey]
+}
+
+export const gridId2axis_for_rehearsal=(grid_x_id)=>{
+    var grid_y_id  = 0;
+    var sx = grid_x_id*grid_width_rehearsal;
+    var sy = grid_y_id*grid_height_rehearsal;
+    var ex = (grid_x_id+1)*grid_width_rehearsal;
+    var ey = (grid_y_id+1)*grid_height_rehearsal;
 
     return [sx, sy, ex, ey]
 }
@@ -137,4 +163,26 @@ export const chordRoot_by_rootId=(roortId)=>{
     }
 
     return chordRoot;
+}
+
+export const display_chordSymbol=()=>{
+    var chordRootSelect = document.getElementById("chord-root");
+    var chordRoot = chordRootSelect.options[chordRootSelect.selectedIndex].text;
+    var chordRootValue = chordRootSelect.options[chordRootSelect.selectedIndex].value;
+    var chordKindSelect = document.getElementById("chord-kind");
+    var chordKind = chordKindSelect.options[chordKindSelect.selectedIndex].text;
+    var chordKindValue = chordKindSelect.options[chordKindSelect.selectedIndex].value;
+    var chordSymbol = document.getElementById("chord-symbol");
+    chordSymbol.innerText = `${chordRoot}${chordKind}`;
+    chordSymbol.dataset.root = chordRootValue;
+    chordSymbol.dataset.kind = chordKindValue;
+}
+
+export const display_rehearsalMark=()=>{
+    var rehearsalMarkSelect = document.getElementById("rehearsal-mark");
+    var rehearsalMark = rehearsalMarkSelect.options[rehearsalMarkSelect.selectedIndex].text;
+    var rehearsalMarkValue = rehearsalMarkSelect.options[rehearsalMarkSelect.selectedIndex].value;
+    var rehearsalMarkSymbol = document.getElementById("rehearsal-mark-symbol");
+    rehearsalMarkSymbol.innerText = `${rehearsalMark}`;
+    rehearsalMarkSymbol.dataset.rehearsal = rehearsalMarkValue ;
 }

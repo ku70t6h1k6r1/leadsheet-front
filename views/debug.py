@@ -15,16 +15,17 @@ class Debug:
 
         @app.route("/input")
         def input():
-
             roots = Const.harmony.roots
             symbols_tetrad = Const.harmony.symbols_tetrad
             symbols_triad = Const.harmony.symbols_triad
+            rehearsalMarks = Const.rehearsalMark.rehearsal_mark_list
 
             return render_template(
                 'input.html', 
                 roots=roots, 
                 symbols_tetrad=symbols_tetrad,
                 symbols_triad=symbols_triad,
+                rehearsalMarks=rehearsalMarks
                 )
 
         @app.route("/input-api", methods=['GET', 'POST'])
