@@ -10,3 +10,4 @@ bk
 *.env
 test-files
 memo
+zappa_settings.json
